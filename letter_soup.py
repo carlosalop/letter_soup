@@ -23,40 +23,51 @@ class LetterSoup():
         column = word.current_pos[1]
         for letter in word.value:
             self.board[row][column] = letter
-            if word.direction == 'up':
+            if word.current_direction == 'up':
                 row -= 1
-            elif word.direction == 'down':
+            elif word.current_direction == 'down':
                 row += 1
-            elif word.direction == 'left':
+            elif word.current_direction == 'left':
                 column -= 1
-            elif word.direction == 'right':
+            elif word.current_direction == 'right':
                 column += 1
     
     def val_word(self, word):
-        row = word.current_pos[0]
-        column = word.current_pos[1]
-        for letter in word.value:
-            board_value = self.board[row][column]
-            if board_value == '' or board_value == letter:
-                if word.direction == 'up':
-                    row -= 1
-                elif word.direction == 'down':
-                    row += 1
-                elif word.direction == 'left':
-                    column -= 1
-                elif word.direction == 'right':
-                    column += 1
-            else:
-                return False
+        if word.current_pos!=None:
+            row = word.current_pos[0]
+            column = word.current_pos[1]
+            for letter in word.value:
+                board_value = self.board[row][column]
+                if board_value == '' or board_value == letter:
+                    if word.current_direction == 'up':
+                        row -= 1
+                    elif word.current_direction == 'down':
+                        row += 1
+                    elif word.current_direction == 'left':
+                        column -= 1
+                    elif word.current_direction == 'right':
+                        column += 1
+                else:
+                    return False
+        else:
+            return False
         return True
     
     def fill_words(self):
         for word in self.words:
-            word.get_new_pos_dir()
-            if self.val_word(word):
+            word.gen_new_pos_dir()
+            valid_word = self.val_word(word)
+            if valid_word:
                 self.write_word(word)
             else:
-                print(f"Can't add word: {word.value} {word.direction} {word.current_pos}")
+                while len(word.valid_pos) > 0 and not valid_word:
+                    # print(f'word.valid_pos = {len(word.valid_pos)}')
+                    word.get_valid_pos()
+                    valid_word = self.val_word(word)
+                    if valid_word:
+                        self.write_word(word)
+                    else:
+                        print(f"Can't add word: {word.value} {word.current_direction} {word.current_pos}")
     
     def fill_empty (self):
         for i, row in enumerate(self.board):
@@ -66,14 +77,31 @@ class LetterSoup():
                     self.board[i][j] = random_letter
 
 class Word():
-    direction = ('up','down','left', 'right')
+    def __init__(self, value):
+        self.value = value.upper()
+        self.letter_soup = None
+        self.clear_pos()
+    
+    def __repr__(self) -> str:
+        return self.value
 
-    def get_new_pos_dir(self):
-        new_direction = random.choice(Word.direction)
-        if not self.valid_pos:
+    def __len__(self):
+        return len(self.value)
+
+    def clear_pos(self):
+        self.available_direction = ['up','down','left', 'right']
+        self.current_direction = ''
+        self.current_pos = None
+        self.valid_pos = []
+        self.unusable_pos = []
+    
+    def gen_new_pos_dir(self):
+        if not self.current_direction:
+            new_direction = random.choice(self.available_direction)
+            self.available_direction.remove(new_direction)
             self.gen_possible_pos(new_direction)
-        self.direction = new_direction
-        self.current_pos = random.choice(self.valid_pos)
+            self.current_direction = new_direction
+            self.current_pos = random.choice(self.valid_pos)
 
     def gen_possible_pos(self, new_direction):
         if new_direction == 'up':
@@ -85,22 +113,13 @@ class Word():
         elif new_direction == 'right':
             self.valid_pos = [(i,j) for i in range(0, self.letter_soup.rows) for j in range(0, self.letter_soup.columns - len(self) + 1)]
 
-    def __init__(self, value):
-        self.value = value.upper()
-        self.letter_soup = None
-        self.clear_pos()
-    
-    def __repr__(self) -> str:
-        return self.value
-
-    def clear_pos(self):
-        self.direction = ''
-        self.current_pos = None
-        self.valid_pos = []
-        self.unusable_pos = []
-    
-    def __len__(self):
-        return len(self.value)
+    def get_valid_pos(self):
+        self.valid_pos.remove(self.current_pos)
+        self.unusable_pos.append(self.current_pos)
+        if self.valid_pos:
+            self.current_pos = random.choice(self.valid_pos)
+        else:
+            self.current_pos = None
 
 # %%
 file_name = 'word_input.txt'
@@ -110,5 +129,6 @@ columns = 10
 # %%
 letter_soup = LetterSoup(rows, columns)
 letter_soup.read_words(file_name)
+letter_soup.fill_words()
 print(letter_soup)
 # %%
