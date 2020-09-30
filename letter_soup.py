@@ -2,7 +2,17 @@
 import random
 #%%
 class LetterSoup():
- 
+    direction_increments = {
+        'up': [-1, 0],
+        'down': [1, 0],
+        'left': [0, -1],
+        'right': [0, 1],
+        'right_up': [-1, 1],
+        'right_down': [1, 1],
+        'left_up': [-1, -1],
+        'left_down': [1, -1]
+    }
+
     def __init__(self, rows, columns):
         self.rows = rows
         self.columns = columns
@@ -23,27 +33,9 @@ class LetterSoup():
         column = word.current_pos[1]
         for letter in word.value:
             self.board[row][column] = letter
-            if word.current_direction == 'up':
-                row -= 1
-            elif word.current_direction == 'down':
-                row += 1
-            elif word.current_direction == 'left':
-                column -= 1
-            elif word.current_direction == 'right':
-                column += 1
-            elif word.current_direction == 'right_up':
-                row -= 1
-                column += 1
-            elif word.current_direction == 'right_down':
-                row += 1
-                column += 1
-            elif word.current_direction == 'left_up':
-                row -= 1
-                column -= 1
-            elif word.current_direction == 'left_down':
-                row += 1
-                column -= 1
-
+            pos_modification = LetterSoup.direction_increments.get(word.current_direction)
+            row += pos_modification[0]
+            column += pos_modification[1]
     
     def val_word(self, word):
         if word.current_pos!=None:
@@ -52,26 +44,9 @@ class LetterSoup():
             for letter in word.value:
                 board_value = self.board[row][column]
                 if board_value == '' or board_value == letter:
-                    if word.current_direction == 'up':
-                        row -= 1
-                    elif word.current_direction == 'down':
-                        row += 1
-                    elif word.current_direction == 'left':
-                        column -= 1
-                    elif word.current_direction == 'right':
-                        column += 1
-                    elif word.current_direction == 'right_up':
-                        row -= 1
-                        column += 1
-                    elif word.current_direction == 'right_down':
-                        row += 1
-                        column += 1
-                    elif word.current_direction == 'left_up':
-                        row -= 1
-                        column -= 1
-                    elif word.current_direction == 'left_down':
-                        row += 1
-                        column -= 1
+                    pos_modification = LetterSoup.direction_increments.get(word.current_direction)
+                    row += pos_modification[0]
+                    column += pos_modification[1]
                 else:
                     return False
         else:
@@ -86,7 +61,6 @@ class LetterSoup():
                 self.write_word(word)
             else:
                 while len(word.valid_pos) > 0 and not valid_word:
-                    # print(f'word.valid_pos = {len(word.valid_pos)}')
                     word.get_valid_pos()
                     valid_word = self.val_word(word)
                     if valid_word:
@@ -129,22 +103,20 @@ class Word():
         self.current_pos = random.choice(self.valid_pos)
 
     def gen_possible_pos(self, new_direction):
-        if new_direction == 'up':
-            self.valid_pos = [(i,j) for i in range(len(self) - 1, self.letter_soup.rows) for j in range(0, self.letter_soup.columns)]
-        elif new_direction == 'down':
-            self.valid_pos = [(i,j) for i in range(0, self.letter_soup.rows - len(self) + 1) for j in range(0, self.letter_soup.columns)]
-        elif new_direction == 'left':
-            self.valid_pos = [(i,j) for i in range(0, self.letter_soup.rows) for j in range(len(self) - 1, self.letter_soup.columns)]
-        elif new_direction == 'right':
-            self.valid_pos = [(i,j) for i in range(0, self.letter_soup.rows) for j in range(0, self.letter_soup.columns - len(self) + 1)]
-        elif new_direction == 'right_up':
-            self.valid_pos = [(i,j) for i in range(len(self) - 1, self.letter_soup.rows) for j in range(0, self.letter_soup.columns - len(self) + 1)]
-        elif new_direction == 'right_down':
-            self.valid_pos = [(i,j) for i in range(0, self.letter_soup.rows - len(self) + 1) for j in range(0, self.letter_soup.columns - len(self) + 1)]
-        elif new_direction == 'left_up':
-            self.valid_pos = [(i,j) for i in range(len(self) - 1, self.letter_soup.rows) for j in range(len(self) - 1, self.letter_soup.columns)]
-        elif new_direction == 'left_down':
-            self.valid_pos = [(i,j) for i in range(0, self.letter_soup.rows - len(self) + 1) for j in range(len(self) - 1, self.letter_soup.columns)]
+        # This list contains the valid ranges for each direction [row init, row final, column init, column final]
+        direction_ranges = {
+            'up': [len(self) - 1, self.letter_soup.rows, 0, self.letter_soup.columns],
+            'down': [0, self.letter_soup.rows - len(self) + 1, 0, self.letter_soup.columns],
+            'left': [0, self.letter_soup.rows, len(self) - 1, self.letter_soup.columns],
+            'right': [0, self.letter_soup.rows, 0, self.letter_soup.columns - len(self) + 1],
+            'right_up': [len(self) - 1, self.letter_soup.rows, 0, self.letter_soup.columns - len(self) + 1],
+            'right_down': [0, self.letter_soup.rows - len(self) + 1, 0, self.letter_soup.columns - len(self) + 1],
+            'left_up': [len(self) - 1, self.letter_soup.rows, len(self) - 1, self.letter_soup.columns],
+            'left_down': [0, self.letter_soup.rows - len(self) + 1, len(self) - 1, self.letter_soup.columns]
+        }
+
+        current_range = direction_ranges.get(new_direction)
+        self.valid_pos = [(i,j) for i in range(current_range[0], current_range[1]) for j in range(current_range[2], current_range[3])]
 
     def get_valid_pos(self):
         self.valid_pos.remove(self.current_pos)
@@ -153,7 +125,6 @@ class Word():
             self.current_pos = random.choice(self.valid_pos)
         else:
             self.current_pos = None
-
 # %%
 file_name = 'word_input.txt'
 rows = 10
@@ -164,5 +135,8 @@ letter_soup = LetterSoup(rows, columns)
 letter_soup.read_words(file_name)
 letter_soup.fill_words()
 letter_soup.fill_empty()
-print(letter_soup.board)
+for word in letter_soup.words:
+    print(word.value, word.current_direction, word.current_pos)
+for i, line in enumerate(letter_soup.board):
+    print(i, line)
 # %%
