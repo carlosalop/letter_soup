@@ -129,14 +129,16 @@ class Word():
 file_name = 'word_input.txt'
 rows = 10
 columns = 10
+def main():
+    letter_soup = LetterSoup(rows, columns)
+    letter_soup.read_words(file_name)
+    letter_soup.fill_words()
+    letter_soup.fill_empty()
+    for word in letter_soup.words:
+        print(word.value, word.current_direction, word.current_pos)
+    for i, line in enumerate(letter_soup.board):
+        print(i, line)
 # %%
-# %%
-letter_soup = LetterSoup(rows, columns)
-letter_soup.read_words(file_name)
-letter_soup.fill_words()
-letter_soup.fill_empty()
-for word in letter_soup.words:
-    print(word.value, word.current_direction, word.current_pos)
-for i, line in enumerate(letter_soup.board):
-    print(i, line)
+if __name__ == '__main__':
+    main()
 # %%
