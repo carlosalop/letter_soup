@@ -31,6 +31,19 @@ class LetterSoup():
                 column -= 1
             elif word.current_direction == 'right':
                 column += 1
+            elif word.current_direction == 'right_up':
+                row -= 1
+                column += 1
+            elif word.current_direction == 'right_down':
+                row += 1
+                column += 1
+            elif word.current_direction == 'left_up':
+                row -= 1
+                column -= 1
+            elif word.current_direction == 'left_down':
+                row += 1
+                column -= 1
+
     
     def val_word(self, word):
         if word.current_pos!=None:
@@ -47,6 +60,18 @@ class LetterSoup():
                         column -= 1
                     elif word.current_direction == 'right':
                         column += 1
+                    elif word.current_direction == 'right_up':
+                        row -= 1
+                        column += 1
+                    elif word.current_direction == 'right_down':
+                        row += 1
+                        column += 1
+                    elif word.current_direction == 'left_up':
+                        row -= 1
+                        column -= 1
+                    elif word.current_direction == 'left_down':
+                        row += 1
+                        column -= 1
                 else:
                     return False
         else:
@@ -89,19 +114,19 @@ class Word():
         return len(self.value)
 
     def clear_pos(self):
-        self.available_direction = ['up','down','left', 'right']
+        self.available_direction = ['up','down','left', 'right','right_up', 
+                                    'right_down', 'left_up', 'left_down']
         self.current_direction = ''
         self.current_pos = None
         self.valid_pos = []
         self.unusable_pos = []
     
     def gen_new_pos_dir(self):
-        if not self.current_direction:
-            new_direction = random.choice(self.available_direction)
-            self.available_direction.remove(new_direction)
-            self.gen_possible_pos(new_direction)
-            self.current_direction = new_direction
-            self.current_pos = random.choice(self.valid_pos)
+        new_direction = random.choice(self.available_direction)
+        self.available_direction.remove(new_direction)
+        self.gen_possible_pos(new_direction)
+        self.current_direction = new_direction
+        self.current_pos = random.choice(self.valid_pos)
 
     def gen_possible_pos(self, new_direction):
         if new_direction == 'up':
@@ -112,6 +137,14 @@ class Word():
             self.valid_pos = [(i,j) for i in range(0, self.letter_soup.rows) for j in range(len(self) - 1, self.letter_soup.columns)]
         elif new_direction == 'right':
             self.valid_pos = [(i,j) for i in range(0, self.letter_soup.rows) for j in range(0, self.letter_soup.columns - len(self) + 1)]
+        elif new_direction == 'right_up':
+            self.valid_pos = [(i,j) for i in range(len(self) - 1, self.letter_soup.rows) for j in range(0, self.letter_soup.columns - len(self) + 1)]
+        elif new_direction == 'right_down':
+            self.valid_pos = [(i,j) for i in range(0, self.letter_soup.rows - len(self) + 1) for j in range(0, self.letter_soup.columns - len(self) + 1)]
+        elif new_direction == 'left_up':
+            self.valid_pos = [(i,j) for i in range(len(self) - 1, self.letter_soup.rows) for j in range(len(self) - 1, self.letter_soup.columns)]
+        elif new_direction == 'left_down':
+            self.valid_pos = [(i,j) for i in range(0, self.letter_soup.rows - len(self) + 1) for j in range(len(self) - 1, self.letter_soup.columns)]
 
     def get_valid_pos(self):
         self.valid_pos.remove(self.current_pos)
@@ -130,5 +163,6 @@ columns = 10
 letter_soup = LetterSoup(rows, columns)
 letter_soup.read_words(file_name)
 letter_soup.fill_words()
-print(letter_soup)
+letter_soup.fill_empty()
+print(letter_soup.board)
 # %%
